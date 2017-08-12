@@ -25,8 +25,10 @@ class Runner(object):
 			self.velocity = max(0, min(self.energy, self.velocity + self.output))
 			self.energy = min(self.max_energy, self.energy - self.output)
 		else:
-			self.velocity = 0
+			self.max_energy -= 0.01
+			self.velocity = max(0, min(self.energy, self.velocity))
 			self.energy = min(self.max_energy, max(0, self.energy + 0.01))
+
 		
 	def print_state(self):
 		return "{:20s}: x = {:6.2f}; v = {:.2f}; e = {:4d}%".format(self.id, f(self.position), f(self.velocity), int(f(self.energy/self.max_energy)*100) )

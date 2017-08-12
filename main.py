@@ -2,8 +2,8 @@ from runner import *
 import sys, curses, time, copy
 
 
-def print_state(stdscr, p, g, runners, GOAL):
-	stdscr.addstr(0, 0, "ID:    ".format(g, p+ 1))
+def print_state(stdscr, p, g, runners, GOAL, steps):
+	stdscr.addstr(0, 0, "time {}    ".format(steps))
 	for i, r in enumerate(runners):
 		stdscr.addstr(i+1, 0, r.print_state() + "  :" + "|" * int(r.position) + " " * (GOAL - int(r.position)) + ":GOAL")
 	stdscr.refresh()
@@ -15,9 +15,12 @@ def main():
 	N = 3
 	GOAL = 10
 	GENERATIONS = 20
-	mutation_rate = 0.1
-	structure = [9, 3, 1]
+	mutation_rate = 0.3
+	structure = [3 * N, 6,3, 1]
 	winners = []
+	TIME_OUT = 10000
+	WIN_CONDITION = 0
+	best = TIME_OUT
 	try:
 		for g in xrange(GENERATIONS):
 			GOAL += 1
@@ -28,10 +31,11 @@ def main():
 						runners[i].brain = copy.deepcopy(winners[i].brain)
 						runners[i].id += winners[i].id
 						
-						runners[i].brain.mutate(mutation_rate * p)
+						runners[i].brain.mutate(mutation_rate * p / g)
 			winners = []
 			for p, runners in enumerate(pool):
 				arrived = 0
+				steps = 0
 				start = time.time()
 				while True:
 					state = ""
@@ -43,11 +47,12 @@ def main():
 						if r.position >= GOAL and not r.isArrived:
 							arrived += 1
 							r.isArrived = arrived
-
-					print_state(stdscr, p, g, runners, GOAL)
-					if arrived >= 1 or time.time() - start > 10:
-						winner = sorted([r for r in runners], key= lambda x: x.position, reverse=True)[0]
+					steps += 1
+					print_state(stdscr, p, g, runners, GOAL, steps)
+					if arrived >= 1 + WIN_CONDITION or steps > TIME_OUT:
+						winner = sorted([r for r in runners], key= lambda x: x.position, reverse=True)[WIN_CONDITION]
 						winners.append(winner)
+						best = min(steps, best)
 						break
 					time.sleep(0.01)
 
@@ -60,6 +65,7 @@ def main():
 		
 		raw_input()
 		curses.endwin()
+		print best
 
 
 
