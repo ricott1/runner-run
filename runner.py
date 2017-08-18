@@ -21,17 +21,24 @@ class Runner(object):
 	def update(self, inputs):
 		self.output = self.brain.propagate(inputs, 0)[0]
 		self.position += self.velocity
-		if self.energy - self.output > 0:
-			self.velocity = max(0, min(self.energy, self.velocity + self.output))
-			self.energy = min(self.max_energy, self.energy - self.output)
+		
+		if self.energy  - (self.velocity + self.output) > 0:
+			self.velocity = max(0, min(self.max_energy, self.velocity + self.output))
+			self.energy = min(self.max_energy, self.energy - self.velocity)
+		elif self.energy  - self.velocity > 0:
+			self.velocity = max(0, min(self.max_energy, self.velocity))
+			self.energy = min(self.max_energy, self.energy - self.velocity)
 		else:
-			self.max_energy -= 0.01
-			self.velocity = max(0, min(self.energy, self.velocity))
+			self.max_energy = max(0, self.max_energy - 0.01)
+			self.velocity = max(0, min(self.max_energy, self.velocity))
 			self.energy = min(self.max_energy, max(0, self.energy + 0.01))
 
-		
+	def recover(self, j):
+		bonus = max(0, 0.0005 * (10 - j))
+		self.max_energy = min(1, self.max_energy + bonus)
+
 	def print_state(self):
-		return "{:20s}: x = {:6.2f}; v = {:.2f}; e = {:4d}%".format(self.id, f(self.position), f(self.velocity), int(f(self.energy/self.max_energy)*100) )
+		return "{:5s}: x = {:6.2f}; v = {:.2f}; e = {:4.2f}/{:4.2f}".format(self.id[-5:], f(self.position), f(self.velocity), f(self.energy), f(self.max_energy) )
 
 
 
